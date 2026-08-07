@@ -1,7 +1,7 @@
 {
-    "name": "Finote Tsidik",
-    "short_name": "Finote",
-    "description": "Finote Tsidik - Book of Hours",
+    "name": "Filseta",
+    "short_name": "Filseta",
+    "description": "Filseta - Daily Book of Hours",
     "start_url": "/",
     "scope": "/",
     "display": "standalone",
