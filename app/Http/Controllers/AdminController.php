@@ -6,11 +6,13 @@ use App\Enums\UserRole;
 use App\Exports\ReportsExport;
 use App\Models\DailySession;
 use App\Models\Item;
+use App\Models\PaymentMethod;
 use App\Models\Sale;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -21,6 +23,8 @@ class AdminController extends Controller
     {
         $dateRange = $request->input('date_range', 'today');
         $salesmanId = $request->input('salesman_id', 'all');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
 
         $salesQuery = Sale::query();
 
@@ -28,6 +32,11 @@ class AdminController extends Controller
             $salesQuery->whereDate('sale_date', today());
         } elseif ($dateRange === 'week') {
             $salesQuery->whereBetween('sale_date', [now()->startOfWeek(), now()->endOfWeek()]);
+        } elseif ($dateRange === 'custom' && $startDate && $endDate) {
+            $salesQuery->whereBetween('sale_date', [$startDate, $endDate]);
+        } else {
+            $dateRange = 'today';
+            $salesQuery->whereDate('sale_date', today());
         }
 
         if ($salesmanId !== 'all') {
@@ -46,14 +55,14 @@ class AdminController extends Controller
         $itemsSold = $summary->items_sold ?? 0;
 
         $salesmanBreakdown = (clone $salesQuery)
-            ->selectRaw('user_id, SUM(quantity * unit_price) as revenue, SUM(quantity) as items_sold')
+            ->selectRaw('user_id, SUM(quantity * unit_price) as revenue, SUM(quantity) as items_sold, SUM(quantity * (unit_price - unit_cost)) as profit')
             ->groupBy('user_id')
             ->with('user')
             ->orderByDesc('revenue')
             ->get();
 
         $itemBreakdown = (clone $salesQuery)
-            ->selectRaw('item_id, SUM(quantity * unit_price) as revenue, SUM(quantity) as items_sold')
+            ->selectRaw('item_id, SUM(quantity * unit_price) as revenue, SUM(quantity) as items_sold, SUM(quantity * (unit_price - unit_cost)) as profit')
             ->groupBy('item_id')
             ->with('item')
             ->orderByDesc('revenue')
@@ -75,6 +84,8 @@ class AdminController extends Controller
         return view('admin.dashboard', compact(
             'dateRange',
             'salesmanId',
+            'startDate',
+            'endDate',
             'totalRevenue',
             'totalCost',
             'totalProfit',
@@ -91,8 +102,14 @@ class AdminController extends Controller
     {
         $dateRange = $request->input('date_range', 'today');
         $salesmanId = $request->input('salesman_id', 'all');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
 
-        return Excel::download(new ReportsExport($dateRange, $salesmanId), 'reports.xlsx');
+        if ($dateRange === 'custom' && !($startDate && $endDate)) {
+            $dateRange = 'today';
+        }
+
+        return Excel::download(new ReportsExport($dateRange, $salesmanId, $startDate, $endDate), 'reports.xlsx');
     }
 
     public function salesmen(): View
@@ -159,5 +176,144 @@ class AdminController extends Controller
             ->update(['is_active' => false, 'closed_at' => now()]);
 
         return back()->with('status', "{$user->name} deactivated for today.");
+    }
+
+    public function items(): View
+    {
+        return view('admin.items', ['items' => Item::orderBy('name')->get()]);
+    }
+
+    public function storeItem(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'cost_price' => ['required', 'numeric', 'min:0'],
+            'sale_price' => ['required', 'numeric', 'min:0'],
+            'stock_quantity' => ['required', 'integer', 'min:0'],
+            'low_stock_threshold' => ['required', 'integer', 'min:0'],
+        ]);
+
+        Item::create($data);
+
+        return redirect()->route('admin.items')->with('status', 'Item added.');
+    }
+
+    public function editItem(Item $item): View
+    {
+        return view('admin.items-edit', ['item' => $item]);
+    }
+
+    public function updateItem(Request $request, Item $item): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'cost_price' => ['required', 'numeric', 'min:0'],
+            'sale_price' => ['required', 'numeric', 'min:0'],
+            'low_stock_threshold' => ['required', 'integer', 'min:0'],
+        ]);
+
+        $item->update($data);
+
+        return redirect()->route('admin.items')->with('status', 'Item updated.');
+    }
+
+    public function destroyItem(Item $item): RedirectResponse
+    {
+        if ($item->sales()->exists()) {
+            return back()->withErrors(['item' => "Cannot delete {$item->name}: sales history exists for this item."]);
+        }
+
+        $item->delete();
+
+        return redirect()->route('admin.items')->with('status', 'Item deleted.');
+    }
+
+    public function restockItem(Request $request, Item $item): RedirectResponse
+    {
+        $data = $request->validate([
+            'quantity' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $item->increment('stock_quantity', $data['quantity']);
+
+        return back()->with('status', "Restocked {$item->name} by {$data['quantity']} unit(s).");
+    }
+
+    public function sales(Request $request): View
+    {
+        $dateRange = $request->input('date_range', 'today');
+        $salesmanId = $request->input('salesman_id', 'all');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        $salesQuery = Sale::with(['item', 'user', 'paymentMethod']);
+
+        if ($dateRange === 'today') {
+            $salesQuery->whereDate('sale_date', today());
+        } elseif ($dateRange === 'week') {
+            $salesQuery->whereBetween('sale_date', [now()->startOfWeek(), now()->endOfWeek()]);
+        } elseif ($dateRange === 'custom' && $startDate && $endDate) {
+            $salesQuery->whereBetween('sale_date', [$startDate, $endDate]);
+        } else {
+            $dateRange = 'today';
+            $salesQuery->whereDate('sale_date', today());
+        }
+
+        if ($salesmanId !== 'all') {
+            $salesQuery->where('user_id', $salesmanId);
+        }
+
+        $sales = $salesQuery->latest('sale_date')->latest('id')->paginate(50)->withQueryString();
+        $salesmen = User::where('role', UserRole::Salesman)->orderBy('name')->get();
+
+        return view('admin.sales', compact('sales', 'salesmen', 'dateRange', 'salesmanId', 'startDate', 'endDate'));
+    }
+
+    public function editSale(Sale $sale): View
+    {
+        return view('admin.sales-edit', [
+            'sale' => $sale->load(['item', 'user', 'paymentMethod']),
+            'paymentMethods' => PaymentMethod::orderBy('name')->get(),
+        ]);
+    }
+
+    public function updateSale(Request $request, Sale $sale): RedirectResponse
+    {
+        $data = $request->validate([
+            'quantity' => ['required', 'integer', 'min:1'],
+            'payment_method_id' => ['required', 'integer', 'exists:payment_methods,id'],
+        ]);
+
+        DB::transaction(function () use ($data, $sale) {
+            $item = Item::query()->lockForUpdate()->findOrFail($sale->item_id);
+
+            $delta = $data['quantity'] - $sale->quantity;
+
+            if ($delta > 0 && $item->stock_quantity < $delta) {
+                throw ValidationException::withMessages([
+                    'quantity' => "Only {$item->stock_quantity} additional unit(s) in stock.",
+                ]);
+            }
+
+            $item->increment('stock_quantity', -$delta);
+
+            $sale->update([
+                'quantity' => $data['quantity'],
+                'payment_method_id' => $data['payment_method_id'],
+            ]);
+        });
+
+        return redirect()->route('admin.sales')->with('status', 'Sale updated.');
+    }
+
+    public function destroySale(Sale $sale): RedirectResponse
+    {
+        DB::transaction(function () use ($sale) {
+            $item = Item::query()->lockForUpdate()->findOrFail($sale->item_id);
+            $item->increment('stock_quantity', $sale->quantity);
+            $sale->delete();
+        });
+
+        return redirect()->route('admin.sales')->with('status', 'Sale deleted, stock restored.');
     }
 }

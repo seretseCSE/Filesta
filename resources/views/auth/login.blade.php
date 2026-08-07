@@ -3,12 +3,11 @@
 @section('title', 'Sign in')
 
 @section('content')
-    <div class="mx-auto flex min-h-dvh max-w-md flex-col px-4 pt-12">
-        <h1 class="text-2xl font-bold">Sign in</h1>
-        <p class="mt-2 text-gray-600">Sign in to access your dashboard.</p>
+    <div class="mx-auto max-w-md px-4 pt-12">
+        <h1 class="text-xl font-bold">Filseta — Sign in</h1>
 
         @if ($errors->any())
-            <div class="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">
+            <div class="mt-4 rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {{ $errors->first() }}
             </div>
         @endif
@@ -24,8 +23,8 @@
                     value="{{ old('email') }}"
                     required
                     autofocus
-                    autocomplete="username"
-                    class="rounded-xl border border-gray-300 px-4 py-3 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    autocomplete="email"
+                    class="w-full rounded border border-gray-300 px-3 py-3 text-base focus:border-indigo-500 focus:outline-none"
                 >
             </label>
 
@@ -36,12 +35,12 @@
                     name="password"
                     required
                     autocomplete="current-password"
-                    class="rounded-xl border border-gray-300 px-4 py-3 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    class="w-full rounded border border-gray-300 px-3 py-3 text-base focus:border-indigo-500 focus:outline-none"
                 >
             </label>
 
             <label class="flex items-center gap-2 text-sm text-gray-600">
-                <input type="checkbox" name="remember" value="1" class="h-4 w-4 rounded border-gray-300">
+                <input type="checkbox" name="remember" value="1" class="h-5 w-5 rounded border-gray-300">
                 Remember me
             </label>
         </form>
@@ -52,7 +51,7 @@
     <button
         type="submit"
         form="login-form"
-        class="w-full rounded-xl bg-indigo-600 px-4 py-3 text-base font-semibold text-white active:bg-indigo-700"
+        class="w-full rounded bg-indigo-600 px-4 py-3 text-base font-semibold text-white active:bg-indigo-700"
     >
         Sign in
     </button>

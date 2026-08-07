@@ -29,6 +29,16 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/salesmen', [AdminController::class, 'storeSalesman'])->name('admin.salesmen.store');
     Route::post('/salesmen/{user}/activate', [AdminController::class, 'activateSalesman'])->name('admin.salesmen.activate');
     Route::post('/salesmen/{user}/deactivate', [AdminController::class, 'deactivateSalesman'])->name('admin.salesmen.deactivate');
+    Route::get('/items', [AdminController::class, 'items'])->name('admin.items');
+    Route::post('/items', [AdminController::class, 'storeItem'])->name('admin.items.store');
+    Route::get('/items/{item}/edit', [AdminController::class, 'editItem'])->name('admin.items.edit');
+    Route::put('/items/{item}', [AdminController::class, 'updateItem'])->name('admin.items.update');
+    Route::delete('/items/{item}', [AdminController::class, 'destroyItem'])->name('admin.items.destroy');
+    Route::post('/items/{item}/restock', [AdminController::class, 'restockItem'])->name('admin.items.restock');
+    Route::get('/sales', [AdminController::class, 'sales'])->name('admin.sales');
+    Route::get('/sales/{sale}/edit', [AdminController::class, 'editSale'])->name('admin.sales.edit');
+    Route::put('/sales/{sale}', [AdminController::class, 'updateSale'])->name('admin.sales.update');
+    Route::delete('/sales/{sale}', [AdminController::class, 'destroySale'])->name('admin.sales.destroy');
 });
 
 Route::prefix('sales')->middleware(['auth', 'role:salesman'])->group(function () {

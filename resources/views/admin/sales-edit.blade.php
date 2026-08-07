@@ -5,7 +5,9 @@
 @section('content')
     <div class="mx-auto max-w-md px-4 pt-6">
         <h1 class="text-lg font-bold">Edit sale</h1>
-        <p class="text-sm text-gray-500">{{ $sale->item->name }} — item cannot be changed.</p>
+        <p class="text-sm text-gray-500">
+            {{ $sale->item->name }} · {{ $sale->user->name }} · {{ $sale->sale_date->format('M j, Y') }}
+        </p>
 
         @if ($errors->any())
             <div class="mt-3 rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -13,7 +15,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('sales.update', $sale) }}" id="edit-sale-form" class="mt-4 flex flex-col gap-4">
+        <form method="POST" action="{{ route('admin.sales.update', $sale) }}" id="edit-sale-form" class="mt-4 flex flex-col gap-4">
             @csrf
             @method('PUT')
 
@@ -41,7 +43,7 @@
 @endsection
 
 @section('actions')
-    <a href="{{ route('sales.index') }}" class="rounded border border-gray-300 px-4 py-3 text-base font-semibold text-gray-700 active:bg-gray-100">
+    <a href="{{ route('admin.sales') }}" class="rounded border border-gray-300 px-4 py-3 text-base font-semibold text-gray-700 active:bg-gray-100">
         Cancel
     </a>
     <button

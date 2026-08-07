@@ -18,7 +18,7 @@ class ReportsSalesmanSheet implements FromCollection, WithTitle, WithHeadings
 
     public function collection()
     {
-        $breakdown = $this->query->selectRaw('user_id, SUM(quantity * unit_price) as revenue, SUM(quantity) as items_sold')
+        $breakdown = $this->query->selectRaw('user_id, SUM(quantity * unit_price) as revenue, SUM(quantity) as items_sold, SUM(quantity * (unit_price - unit_cost)) as profit')
             ->groupBy('user_id')
             ->with('user')
             ->orderByDesc('revenue')
@@ -29,6 +29,7 @@ class ReportsSalesmanSheet implements FromCollection, WithTitle, WithHeadings
                 'salesman' => $row->user->name,
                 'items_sold' => $row->items_sold,
                 'revenue' => $row->revenue,
+                'profit' => $row->profit,
             ];
         });
     }
@@ -39,6 +40,7 @@ class ReportsSalesmanSheet implements FromCollection, WithTitle, WithHeadings
             'Salesman',
             'Items Sold',
             'Revenue (ETB)',
+            'Profit (ETB)',
         ];
     }
 

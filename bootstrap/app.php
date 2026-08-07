@@ -6,6 +6,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 
 use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\EnsureActiveDailySession;
+use App\Http\Middleware\PreventBackHistory;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -17,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => CheckRole::class,
             'active.daily.session' => EnsureActiveDailySession::class,
+        ]);
+
+        $middleware->web(append: [
+            PreventBackHistory::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
