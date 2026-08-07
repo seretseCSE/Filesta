@@ -37,6 +37,12 @@
             </label>
 
             <label class="flex flex-col gap-1">
+                <span class="text-sm font-medium text-gray-700">Stock quantity</span>
+                <input type="number" name="stock_quantity" min="0" value="{{ old('stock_quantity', $item->stock_quantity) }}" required
+                    class="w-full rounded border border-gray-300 px-3 py-3 text-base focus:border-indigo-500 focus:outline-none">
+            </label>
+
+            <label class="flex flex-col gap-1">
                 <span class="text-sm font-medium text-gray-700">Low-stock threshold</span>
                 <input type="number" name="low_stock_threshold" min="0" value="{{ old('low_stock_threshold', $item->low_stock_threshold) }}" required
                     class="w-full rounded border border-gray-300 px-3 py-3 text-base focus:border-indigo-500 focus:outline-none">

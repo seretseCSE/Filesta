@@ -102,6 +102,12 @@
                             <button type="button" data-pw-toggle="password-form-{{ $salesman->id }}" class="text-sm text-gray-500 active:text-gray-700">
                                 Reset password
                             </button>
+                            <form method="POST" action="{{ route('admin.salesmen.destroy', $salesman) }}" onsubmit="return confirm('Delete {{ $salesman->name }}? This cannot be undone.')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="text-sm font-medium text-red-600 active:text-red-800">
+                                    Delete
+                                </button>
+                            </form>
                         </div>
                     </div>
 

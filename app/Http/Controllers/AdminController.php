@@ -198,6 +198,26 @@ class AdminController extends Controller
         return back()->with('status', "Password updated for {$user->name}.");
     }
 
+    public function destroySalesman(User $user): RedirectResponse
+    {
+        abort_unless($user->isSalesman(), 404);
+
+        if ($user->id === auth()->id()) {
+            return back()->withErrors(['salesman' => 'You cannot delete your own account.']);
+        }
+
+        if ($user->sales()->exists()) {
+            return back()->withErrors(['salesman' => "Cannot delete {$user->name}: sales history exists for this account."]);
+        }
+
+        DB::transaction(function () use ($user) {
+            $user->dailySessions()->delete();
+            $user->delete();
+        });
+
+        return redirect()->route('admin.salesmen')->with('status', "{$user->name} deleted.");
+    }
+
     public function items(): View
     {
         return view('admin.items', ['items' => Item::orderBy('name')->get()]);
@@ -229,6 +249,7 @@ class AdminController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'cost_price' => ['required', 'numeric', 'min:0'],
             'sale_price' => ['required', 'numeric', 'min:0'],
+            'stock_quantity' => ['required', 'integer', 'min:0'],
             'low_stock_threshold' => ['required', 'integer', 'min:0'],
         ]);
 

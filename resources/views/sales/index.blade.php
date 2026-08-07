@@ -3,6 +3,15 @@
 @section('title', 'Log a sale')
 @section('page-title', 'Log a sale')
 
+@php
+    $itemOptions = $items->map(fn ($item) => [
+        'id' => $item->id,
+        'name' => $item->name,
+        'price' => (float) $item->sale_price,
+        'stock' => (int) $item->stock_quantity,
+    ])->values();
+@endphp
+
 @section('app-bar-actions')
     @if ($session?->activated_at)
         <span style="font-size:0.75rem;color:#94a3b8;">Since {{ $session->activated_at->format('g:i A') }}</span>
@@ -25,13 +34,17 @@
 
         <div class="field">
             <label class="field-label">Item</label>
-            <select name="item_id" required class="form-select">
-                @foreach ($items as $item)
-                    <option value="{{ $item->id }}" @selected(old('item_id') == $item->id)>
-                        {{ $item->name }} — ETB {{ number_format($item->sale_price, 2) }}
-                    </option>
-                @endforeach
-            </select>
+            <input
+                type="text"
+                id="item-search"
+                class="form-input"
+                placeholder="Search items…"
+                value="{{ old('item_name') }}"
+                autocomplete="off"
+            >
+            <input type="hidden" name="item_id" id="item-id" value="{{ old('item_id') }}">
+            <div id="item-results" class="hidden overflow-hidden rounded-md border border-gray-300 bg-white shadow-sm"></div>
+            <p id="item-pick-error" class="hidden text-sm text-red-600">Please pick an item from the list.</p>
         </div>
 
         <div class="field">
@@ -78,3 +91,78 @@
 @section('bottom-bar')
     <button type="submit" form="sale-form" data-offline-disable class="btn btn-indigo">Log sale</button>
 @endsection
+
+@push('scripts')
+    <script>
+        (function () {
+            var items = @json($itemOptions);
+            var search = document.getElementById('item-search');
+            var hidden = document.getElementById('item-id');
+            var results = document.getElementById('item-results');
+            var error = document.getElementById('item-pick-error');
+
+            function select(item) {
+                hidden.value = item.id;
+                search.value = item.name;
+                error.classList.add('hidden');
+                results.classList.add('hidden');
+                results.innerHTML = '';
+            }
+
+            function render(q) {
+                var query = q.trim().toLowerCase();
+                if (!query) {
+                    results.classList.add('hidden');
+                    results.innerHTML = '';
+                    return;
+                }
+                var matches = items.filter(function (item) {
+                    return item.name.toLowerCase().indexOf(query) !== -1;
+                });
+                results.innerHTML = '';
+                if (!matches.length) {
+                    var empty = document.createElement('div');
+                    empty.className = 'px-3 py-3 text-sm text-gray-400';
+                    empty.textContent = 'No matching items.';
+                    results.appendChild(empty);
+                } else {
+                    matches.forEach(function (item) {
+                        var btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'flex w-full items-center justify-between gap-2 px-3 py-3 text-left text-base active:bg-gray-100';
+                        var stockColor = item.stock > 0 ? 'text-gray-400' : 'text-red-500 font-semibold';
+                        var stockText = item.stock > 0 ? 'Stock: ' + item.stock : 'Out of stock';
+                        btn.innerHTML =
+                            '<span class="min-w-0"><span class="block font-medium text-gray-900">' + item.name + '</span>' +
+                            '<span class="block text-sm ' + stockColor + '">' + stockText + '</span></span>' +
+                            '<span class="shrink-0 font-semibold text-gray-700">ETB ' + item.price.toFixed(2) + '</span>';
+                        btn.addEventListener('click', function () { select(item); });
+                        results.appendChild(btn);
+                    });
+                }
+                results.classList.remove('hidden');
+            }
+
+            search.addEventListener('input', function () {
+                if (hidden.value) {
+                    hidden.value = '';
+                }
+                render(search.value);
+            });
+            search.addEventListener('focus', function () { render(search.value); });
+
+            if (hidden.value) {
+                var found = items.find(function (item) { return String(item.id) === String(hidden.value); });
+                if (found) select(found);
+            }
+
+            document.getElementById('sale-form').addEventListener('submit', function (e) {
+                if (!hidden.value) {
+                    e.preventDefault();
+                    error.classList.remove('hidden');
+                    search.focus();
+                }
+            });
+        })();
+    </script>
+@endpush

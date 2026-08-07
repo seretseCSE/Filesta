@@ -42,10 +42,17 @@
         {{-- Item list --}}
         <h2 class="mt-6 border-t border-gray-200 pt-4 text-sm font-semibold text-gray-700">All items</h2>
 
-        <ul class="mt-3 flex flex-col divide-y divide-gray-100">
+        <input
+            type="text"
+            id="item-search"
+            placeholder="Search items…"
+            class="mt-3 w-full rounded border border-gray-300 px-3 py-3 text-base focus:border-indigo-500 focus:outline-none"
+        >
+
+        <ul id="items-list" class="mt-3 flex flex-col divide-y divide-gray-100">
             @forelse ($items as $item)
                 @php $low = $item->stock_quantity <= $item->low_stock_threshold; @endphp
-                <li class="py-3 {{ $low ? 'text-red-700' : '' }}">
+                <li class="py-3 {{ $low ? 'text-red-700' : '' }}" data-name="{{ mb_strtolower($item->name) }}">
                     <div class="flex items-start justify-between gap-3">
                         <div class="min-w-0">
                             <p class="font-medium">
@@ -98,3 +105,18 @@
         Add item
     </button>
 @endsection
+
+@push('scripts')
+    <script>
+        var searchInput = document.getElementById('item-search');
+        if (searchInput) {
+            var rows = document.querySelectorAll('#items-list li');
+            searchInput.addEventListener('input', function () {
+                var query = searchInput.value.trim().toLowerCase();
+                rows.forEach(function (row) {
+                    row.style.display = row.getAttribute('data-name').indexOf(query) !== -1 ? '' : 'none';
+                });
+            });
+        }
+    </script>
+@endpush
