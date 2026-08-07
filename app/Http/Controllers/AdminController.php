@@ -4,16 +4,84 @@ namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
 use App\Models\DailySession;
+use App\Models\Item;
+use App\Models\Sale;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class AdminController extends Controller
 {
-    public function dashboard(): View
+    public function dashboard(Request $request): View
     {
-        return view('admin.dashboard');
+        $dateRange = $request->input('date_range', 'today');
+        $salesmanId = $request->input('salesman_id', 'all');
+
+        $salesQuery = Sale::query();
+
+        if ($dateRange === 'today') {
+            $salesQuery->whereDate('sale_date', today());
+        } elseif ($dateRange === 'week') {
+            $salesQuery->whereBetween('sale_date', [now()->startOfWeek(), now()->endOfWeek()]);
+        }
+
+        if ($salesmanId !== 'all') {
+            $salesQuery->where('user_id', $salesmanId);
+        }
+
+        $summary = (clone $salesQuery)->selectRaw('
+            SUM(quantity * unit_price) as total_revenue,
+            SUM(quantity * unit_cost) as total_cost,
+            SUM(quantity) as items_sold
+        ')->first();
+
+        $totalRevenue = $summary->total_revenue ?? 0;
+        $totalCost = $summary->total_cost ?? 0;
+        $totalProfit = $totalRevenue - $totalCost;
+        $itemsSold = $summary->items_sold ?? 0;
+
+        $salesmanBreakdown = (clone $salesQuery)
+            ->selectRaw('user_id, SUM(quantity * unit_price) as revenue, SUM(quantity) as items_sold')
+            ->groupBy('user_id')
+            ->with('user')
+            ->orderByDesc('revenue')
+            ->get();
+
+        $itemBreakdown = (clone $salesQuery)
+            ->selectRaw('item_id, SUM(quantity * unit_price) as revenue, SUM(quantity) as items_sold')
+            ->groupBy('item_id')
+            ->with('item')
+            ->orderByDesc('revenue')
+            ->get();
+
+        $paymentBreakdown = (clone $salesQuery)
+            ->selectRaw('payment_method_id, SUM(quantity * unit_price) as revenue')
+            ->groupBy('payment_method_id')
+            ->with('paymentMethod')
+            ->orderByDesc('revenue')
+            ->get();
+
+        $lowStockItems = Item::whereColumn('stock_quantity', '<=', 'low_stock_threshold')
+            ->orderBy('stock_quantity')
+            ->get();
+
+        $salesmen = User::where('role', UserRole::Salesman)->orderBy('name')->get();
+
+        return view('admin.dashboard', compact(
+            'dateRange',
+            'salesmanId',
+            'totalRevenue',
+            'totalCost',
+            'totalProfit',
+            'itemsSold',
+            'salesmanBreakdown',
+            'itemBreakdown',
+            'paymentBreakdown',
+            'lowStockItems',
+            'salesmen'
+        ));
     }
 
     public function salesmen(): View

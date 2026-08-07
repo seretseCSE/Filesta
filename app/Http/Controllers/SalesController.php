@@ -122,6 +122,49 @@ class SalesController extends Controller
         return view('sales.blocked');
     }
 
+    public function close(): View
+    {
+        $userId = auth()->id();
+
+        $todayRevenue = Sale::where('user_id', $userId)
+            ->where('sale_date', today()->toDateString())
+            ->get()
+            ->sum(fn ($sale) => $sale->quantity * $sale->unit_price);
+
+        $salesmen = \App\Models\User::where('role', \App\Enums\UserRole::Salesman)
+            ->with('sales')
+            ->get();
+
+        $salesmen = $salesmen->map(function ($salesman) {
+            $salesman->total_revenue = $salesman->sales->sum(fn ($s) => $s->quantity * $s->unit_price);
+            return $salesman;
+        })->sortByDesc('total_revenue')->values();
+
+        $cumulativeRevenue = $salesmen->firstWhere('id', $userId)?->total_revenue ?? 0;
+        $rank = $salesmen->search(fn ($salesman) => $salesman->id === $userId);
+        $rank = $rank === false ? $salesmen->count() + 1 : $rank + 1;
+
+        return view('sales.close', compact('todayRevenue', 'cumulativeRevenue', 'rank'));
+    }
+
+    public function storeClose(): RedirectResponse
+    {
+        $session = $this->currentSession();
+        if ($session) {
+            $session->update([
+                'closed_at' => now(),
+                'is_active' => false,
+            ]);
+        }
+
+        return redirect()->route('sales.closed');
+    }
+
+    public function closed(): View
+    {
+        return view('sales.closed');
+    }
+
     private function currentSession(): ?DailySession
     {
         return DailySession::query()

@@ -32,6 +32,9 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
 
 Route::prefix('sales')->middleware(['auth', 'role:salesman'])->group(function () {
     Route::get('/blocked', [SalesController::class, 'blocked'])->name('sales.blocked');
+    Route::get('/closed', [SalesController::class, 'closed'])->name('sales.closed');
+    Route::get('/close', [SalesController::class, 'close'])->middleware('active.daily.session')->name('sales.close');
+    Route::post('/close', [SalesController::class, 'storeClose'])->middleware('active.daily.session')->name('sales.close.store');
     Route::get('/', [SalesController::class, 'index'])->middleware('active.daily.session')->name('sales.index');
     Route::post('/', [SalesController::class, 'store'])->middleware('active.daily.session')->name('sales.store');
     Route::get('/{sale}/edit', [SalesController::class, 'edit'])->middleware('active.daily.session')->name('sales.edit');

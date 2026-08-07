@@ -11,10 +11,17 @@
                     <p class="mt-1 text-sm text-gray-600">Session active since {{ $session->activated_at->format('g:i A') }}.</p>
                 @endif
             </div>
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="text-sm text-gray-500 active:text-gray-700">Sign out</button>
-            </form>
+            <div class="flex flex-col items-end gap-2">
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="text-sm text-gray-500 active:text-gray-700">Sign out</button>
+                </form>
+                @if ($session?->is_active)
+                    <a href="{{ route('sales.close') }}" class="text-sm font-semibold text-red-600 active:text-red-700">
+                        Close day
+                    </a>
+                @endif
+            </div>
         </div>
 
         @if (session('status'))
