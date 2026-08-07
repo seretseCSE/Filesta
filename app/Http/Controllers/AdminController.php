@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
@@ -144,12 +145,18 @@ class AdminController extends Controller
             'password' => ['required', 'string', 'min:4'],
         ]);
 
-        User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => $data['password'],
-            'role' => UserRole::Salesman,
-        ]);
+        try {
+            User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => $data['password'],
+                'role' => UserRole::Salesman,
+            ]);
+        } catch (UniqueConstraintViolationException) {
+            return back()
+                ->withErrors(['email' => 'A salesman with this email already exists.'])
+                ->onlyInput('name', 'email');
+        }
 
         return redirect()->route('admin.salesmen')->with('status', 'Salesman added.');
     }
@@ -176,6 +183,19 @@ class AdminController extends Controller
             ->update(['is_active' => false, 'closed_at' => now()]);
 
         return back()->with('status', "{$user->name} deactivated for today.");
+    }
+
+    public function updateSalesmanPassword(Request $request, User $user): RedirectResponse
+    {
+        abort_unless($user->isSalesman(), 404);
+
+        $data = $request->validate([
+            'password' => ['required', 'string', 'min:4'],
+        ]);
+
+        $user->update(['password' => $data['password']]);
+
+        return back()->with('status', "Password updated for {$user->name}.");
     }
 
     public function items(): View

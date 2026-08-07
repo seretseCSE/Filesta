@@ -29,6 +29,7 @@ Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/salesmen', [AdminController::class, 'storeSalesman'])->name('admin.salesmen.store');
     Route::post('/salesmen/{user}/activate', [AdminController::class, 'activateSalesman'])->name('admin.salesmen.activate');
     Route::post('/salesmen/{user}/deactivate', [AdminController::class, 'deactivateSalesman'])->name('admin.salesmen.deactivate');
+    Route::post('/salesmen/{user}/password', [AdminController::class, 'updateSalesmanPassword'])->name('admin.salesmen.password');
     Route::get('/items', [AdminController::class, 'items'])->name('admin.items');
     Route::post('/items', [AdminController::class, 'storeItem'])->name('admin.items.store');
     Route::get('/items/{item}/edit', [AdminController::class, 'editItem'])->name('admin.items.edit');
