@@ -162,13 +162,21 @@
             var installBtn = document.getElementById('install-app-btn');
             var closeBtn = document.getElementById('close-install');
             var deferredPrompt = null;
-            var dismissedUntil = parseInt(localStorage.getItem('install_dismissed_until') || '0', 10);
             var isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
             var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+            var installed = localStorage.getItem('install_installed') === '1';
+            var dismissedThisSession = sessionStorage.getItem('install_dismissed_session') === '1';
 
-            if (!banner || isStandalone || Date.now() < dismissedUntil) return;
+            if (!banner || isStandalone || installed || dismissedThisSession) return;
 
             function show() { banner.style.display = 'block'; }
+            function hide() { banner.style.display = 'none'; }
+
+            // Once the app is installed, never ask again
+            if (isStandalone) {
+                localStorage.setItem('install_installed', '1');
+                return;
+            }
 
             // iOS Safari: no install prompt event, guide to Share -> Add to Home Screen
             if (isIOS) {
@@ -191,15 +199,19 @@
                 if (!deferredPrompt) return;
                 installBtn.disabled = true;
                 deferredPrompt.prompt();
-                deferredPrompt.userChoice.then(function () {
+                deferredPrompt.userChoice.then(function (choice) {
                     deferredPrompt = null;
-                    banner.style.display = 'none';
+                    if (choice.outcome === 'accepted') {
+                        localStorage.setItem('install_installed', '1');
+                    }
+                    hide();
                 });
             });
 
+            // Dismiss hides it for this tab session only; it returns on the next page load
             closeBtn.addEventListener('click', function () {
-                banner.style.display = 'none';
-                localStorage.setItem('install_dismissed_until', String(Date.now() + 7 * 24 * 60 * 60 * 1000));
+                hide();
+                sessionStorage.setItem('install_dismissed_session', '1');
             });
         })();
 
