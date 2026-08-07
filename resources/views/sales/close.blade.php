@@ -48,7 +48,8 @@
     <button
         type="submit"
         form="close-form"
-        class="flex-1 rounded-xl bg-red-600 px-4 py-3 text-base font-semibold text-white active:bg-red-700"
+        data-offline-disable
+        class="flex-1 rounded-xl bg-red-600 px-4 py-3 text-base font-semibold text-white active:bg-red-700 transition-colors"
     >
         Confirm close out
     </button>

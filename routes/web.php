@@ -24,6 +24,7 @@ Route::get('/', function () {
 
 Route::prefix('admin')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/export', [AdminController::class, 'exportReports'])->name('admin.reports.export');
     Route::get('/salesmen', [AdminController::class, 'salesmen'])->name('admin.salesmen');
     Route::post('/salesmen', [AdminController::class, 'storeSalesman'])->name('admin.salesmen.store');
     Route::post('/salesmen/{user}/activate', [AdminController::class, 'activateSalesman'])->name('admin.salesmen.activate');

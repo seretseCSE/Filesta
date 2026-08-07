@@ -17,7 +17,7 @@
                     <button type="submit" class="text-sm text-gray-500 active:text-gray-700">Sign out</button>
                 </form>
                 @if ($session?->is_active)
-                    <a href="{{ route('sales.close') }}" class="text-sm font-semibold text-red-600 active:text-red-700">
+                    <a href="{{ route('sales.close') }}" data-offline-disable class="text-sm font-semibold text-red-600 active:text-red-700">
                         Close day
                     </a>
                 @endif
@@ -122,7 +122,8 @@
     <button
         type="submit"
         form="sale-form"
-        class="w-full rounded-xl bg-indigo-600 px-4 py-3 text-base font-semibold text-white active:bg-indigo-700"
+        data-offline-disable
+        class="w-full rounded-xl bg-indigo-600 px-4 py-3 text-base font-semibold text-white active:bg-indigo-700 transition-colors"
     >
         Log sale
     </button>

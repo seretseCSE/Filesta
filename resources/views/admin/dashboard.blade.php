@@ -41,6 +41,11 @@
                     @endforeach
                 </select>
             </label>
+            <div class="flex items-end sm:ml-auto">
+                <button type="submit" formaction="{{ route('admin.reports.export') }}" class="rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                    Export to Excel
+                </button>
+            </div>
         </form>
 
         <div class="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">

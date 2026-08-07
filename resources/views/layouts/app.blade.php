@@ -14,6 +14,18 @@
     @stack('head')
 </head>
 <body class="min-h-dvh bg-gray-50 font-sans text-gray-900 antialiased">
+    <div id="offline-banner" class="fixed inset-x-0 top-0 z-[100] hidden bg-red-600 px-4 py-2 text-center text-sm font-medium text-white shadow-lg">
+        No connection &mdash; reconnect to continue
+    </div>
+
+    <div id="ios-pwa-banner" class="fixed inset-x-0 top-0 z-[90] hidden bg-indigo-600 px-4 py-3 text-white shadow-lg pb-[env(safe-area-inset-top)]">
+        <div class="flex items-start justify-between gap-3 pt-safe">
+            <p class="text-sm font-medium leading-tight">
+                Install this app on your iPhone: tap <span class="font-bold">Share</span>, then <span class="font-bold">Add to Home Screen</span>.
+            </p>
+            <button type="button" id="close-ios-banner" class="shrink-0 rounded-full p-1 text-indigo-200 hover:text-white active:bg-indigo-700">&times;</button>
+        </div>
+    </div>
     <main class="pb-28">
         @yield('content')
     </main>
@@ -36,6 +48,59 @@
                 navigator.serviceWorker.register('/sw.js').catch(() => {});
             });
         }
+
+        // iOS Install Banner Logic
+        const isIos = () => {
+            const userAgent = window.navigator.userAgent.toLowerCase();
+            return /iphone|ipad|ipod/.test(userAgent);
+        };
+        const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+
+        if (isIos() && !isInStandaloneMode() && !localStorage.getItem('ios_banner_dismissed')) {
+            const banner = document.getElementById('ios-pwa-banner');
+            banner.classList.remove('hidden');
+            document.getElementById('close-ios-banner').addEventListener('click', () => {
+                banner.classList.add('hidden');
+                localStorage.setItem('ios_banner_dismissed', 'true');
+            });
+        }
+
+        // Offline / Online Status Logic
+        const updateOnlineStatus = () => {
+            const offlineBanner = document.getElementById('offline-banner');
+            const disableElements = document.querySelectorAll('[data-offline-disable]');
+
+            if (navigator.onLine) {
+                offlineBanner.classList.add('hidden');
+                disableElements.forEach(el => {
+                    if (el.tagName === 'A') {
+                        el.style.pointerEvents = 'auto';
+                    } else {
+                        el.disabled = false;
+                    }
+                    el.innerText = el.dataset.originalText || el.innerText;
+                    el.classList.remove('opacity-50', 'cursor-not-allowed');
+                });
+            } else {
+                offlineBanner.classList.remove('hidden');
+                disableElements.forEach(el => {
+                    if (!el.dataset.originalText) {
+                        el.dataset.originalText = el.innerText;
+                    }
+                    if (el.tagName === 'A') {
+                        el.style.pointerEvents = 'none';
+                    } else {
+                        el.disabled = true;
+                    }
+                    el.innerText = 'No connection — reconnect to continue';
+                    el.classList.add('opacity-50', 'cursor-not-allowed');
+                });
+            }
+        };
+
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        updateOnlineStatus();
     </script>
     @stack('scripts')
 </body>

@@ -31,17 +31,17 @@
                     class="rounded-xl border border-gray-300 px-4 py-3 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                 >
                 <input
-                    type="tel"
-                    name="phone"
-                    placeholder="Phone number"
-                    value="{{ old('phone') }}"
+                    type="email"
+                    name="email"
+                    placeholder="Email address"
+                    value="{{ old('email') }}"
                     required
                     class="rounded-xl border border-gray-300 px-4 py-3 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                 >
                 <input
                     type="password"
-                    name="pin"
-                    placeholder="PIN (at least 4 characters)"
+                    name="password"
+                    placeholder="Password (at least 4 characters)"
                     required
                     class="rounded-xl border border-gray-300 px-4 py-3 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
                 >
@@ -62,7 +62,7 @@
                                     #{{ $salesman->rank }}
                                 </span>
                             </p>
-                            <p class="mt-0.5 text-sm text-gray-600">{{ $salesman->phone }}</p>
+                            <p class="mt-0.5 text-sm text-gray-600">{{ $salesman->email }}</p>
                             <p class="mt-1 text-sm text-gray-800">
                                 Revenue: <span class="font-semibold">ETB {{ number_format($salesman->revenue, 2) }}</span>
                             </p>

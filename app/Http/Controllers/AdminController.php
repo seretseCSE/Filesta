@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
+use App\Exports\ReportsExport;
 use App\Models\DailySession;
 use App\Models\Item;
 use App\Models\Sale;
@@ -11,6 +12,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class AdminController extends Controller
 {
@@ -84,6 +87,14 @@ class AdminController extends Controller
         ));
     }
 
+    public function exportReports(Request $request): BinaryFileResponse
+    {
+        $dateRange = $request->input('date_range', 'today');
+        $salesmanId = $request->input('salesman_id', 'all');
+
+        return Excel::download(new ReportsExport($dateRange, $salesmanId), 'reports.xlsx');
+    }
+
     public function salesmen(): View
     {
         $salesmen = User::where('role', UserRole::Salesman)
@@ -112,14 +123,14 @@ class AdminController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'string', 'max:20', 'unique:users,phone'],
-            'pin' => ['required', 'string', 'min:4', 'max:10'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:4'],
         ]);
 
         User::create([
             'name' => $data['name'],
-            'phone' => $data['phone'],
-            'pin' => $data['pin'],
+            'email' => $data['email'],
+            'password' => $data['password'],
             'role' => UserRole::Salesman,
         ]);
 

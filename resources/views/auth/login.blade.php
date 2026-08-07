@@ -5,7 +5,7 @@
 @section('content')
     <div class="mx-auto flex min-h-dvh max-w-md flex-col px-4 pt-12">
         <h1 class="text-2xl font-bold">Sign in</h1>
-        <p class="mt-2 text-gray-600">Admins sign in with email and password. Salesmen sign in with phone and PIN.</p>
+        <p class="mt-2 text-gray-600">Sign in to access your dashboard.</p>
 
         @if ($errors->any())
             <div class="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">
@@ -17,11 +17,11 @@
             @csrf
 
             <label class="flex flex-col gap-1">
-                <span class="text-sm font-medium text-gray-700">Email or phone</span>
+                <span class="text-sm font-medium text-gray-700">Email address</span>
                 <input
-                    type="text"
-                    name="identity"
-                    value="{{ old('identity') }}"
+                    type="email"
+                    name="email"
+                    value="{{ old('email') }}"
                     required
                     autofocus
                     autocomplete="username"
@@ -30,10 +30,10 @@
             </label>
 
             <label class="flex flex-col gap-1">
-                <span class="text-sm font-medium text-gray-700">Password or PIN</span>
+                <span class="text-sm font-medium text-gray-700">Password</span>
                 <input
                     type="password"
-                    name="secret"
+                    name="password"
                     required
                     autocomplete="current-password"
                     class="rounded-xl border border-gray-300 px-4 py-3 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
