@@ -1,58 +1,30 @@
 @extends('layouts.app')
 
 @section('title', 'Sign in')
+@section('page-title', 'Filseta')
 
 @section('content')
-    <div class="mx-auto max-w-md px-4 pt-12">
-        <h1 class="text-xl font-bold">Filseta — Sign in</h1>
+    @if ($errors->any())
+        <div class="alert-error">{{ $errors->first() }}</div>
+    @endif
 
-        @if ($errors->any())
-            <div class="mt-4 rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {{ $errors->first() }}
-            </div>
-        @endif
-
-        <form method="POST" action="{{ route('login.attempt') }}" id="login-form" class="mt-6 flex flex-col gap-4">
-            @csrf
-
-            <label class="flex flex-col gap-1">
-                <span class="text-sm font-medium text-gray-700">Email address</span>
-                <input
-                    type="email"
-                    name="email"
-                    value="{{ old('email') }}"
-                    required
-                    autofocus
-                    autocomplete="email"
-                    class="w-full rounded border border-gray-300 px-3 py-3 text-base focus:border-indigo-500 focus:outline-none"
-                >
-            </label>
-
-            <label class="flex flex-col gap-1">
-                <span class="text-sm font-medium text-gray-700">Password</span>
-                <input
-                    type="password"
-                    name="password"
-                    required
-                    autocomplete="current-password"
-                    class="w-full rounded border border-gray-300 px-3 py-3 text-base focus:border-indigo-500 focus:outline-none"
-                >
-            </label>
-
-            <label class="flex items-center gap-2 text-sm text-gray-600">
-                <input type="checkbox" name="remember" value="1" class="h-5 w-5 rounded border-gray-300">
-                Remember me
-            </label>
-        </form>
-    </div>
+    <form method="POST" action="{{ route('login.attempt') }}" id="login-form">
+        @csrf
+        <div class="field">
+            <label>Email address</label>
+            <input type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="email" class="form-input">
+        </div>
+        <div class="field">
+            <label>Password</label>
+            <input type="password" name="password" required autocomplete="current-password" class="form-input">
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:0.875rem;color:#64748b;margin-top:4px;">
+            <input type="checkbox" name="remember" value="1" style="width:18px;height:18px;">
+            Remember me
+        </label>
+    </form>
 @endsection
 
-@section('actions')
-    <button
-        type="submit"
-        form="login-form"
-        class="w-full rounded bg-indigo-600 px-4 py-3 text-base font-semibold text-white active:bg-indigo-700"
-    >
-        Sign in
-    </button>
+@section('bottom-bar')
+    <button type="submit" form="login-form" class="btn btn-indigo">Sign in</button>
 @endsection

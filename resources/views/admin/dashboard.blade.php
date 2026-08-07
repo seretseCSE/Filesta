@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Dashboard')
+@section('page-title', 'Admin Dashboard')
 
 @section('content')
     <div class="mx-auto max-w-2xl px-4 pt-6 pb-6">

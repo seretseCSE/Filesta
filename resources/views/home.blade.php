@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Finote Tsidik')
+@section('page-title', 'Finote Tsidik')
 
 @section('content')
     <div class="mx-auto flex min-h-dvh max-w-md flex-col px-4 pt-12">

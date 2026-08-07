@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Edit sale')
+@section('page-title', 'Edit sale')
 
 @section('content')
     <div class="mx-auto max-w-md px-4 pt-6">

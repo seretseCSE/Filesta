@@ -12,13 +12,10 @@ class PreventBackHistory
     {
         $response = $next($request);
 
-        if ($response instanceof \Symfony\Component\HttpFoundation\BinaryFileResponse) {
-            return $response;
-        }
+        $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0, post-check=0, pre-check=0');
+        $response->headers->set('Pragma', 'no-cache');
+        $response->headers->set('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
 
-        return $response
-            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0, post-check=0, pre-check=0')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
+        return $response;
     }
 }

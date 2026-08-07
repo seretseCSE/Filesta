@@ -119,7 +119,22 @@ class SalesController extends Controller
 
     public function blocked(): View
     {
-        return view('sales.blocked');
+        $session = $this->currentSession();
+
+        $stats = (object) ['count' => 0, 'revenue' => 0.0];
+
+        if ($session !== null) {
+            $stats = Sale::query()
+                ->where('user_id', auth()->id())
+                ->where('sale_date', today()->toDateString())
+                ->selectRaw('COUNT(*) as count, COALESCE(SUM(quantity * unit_price), 0) as revenue')
+                ->first();
+        }
+
+        return view('sales.blocked', [
+            'session' => $session,
+            'stats' => $stats,
+        ]);
     }
 
     public function close(): View
@@ -162,7 +177,13 @@ class SalesController extends Controller
 
     public function closed(): View
     {
-        return view('sales.closed');
+        $stats = Sale::query()
+            ->where('user_id', auth()->id())
+            ->where('sale_date', today()->toDateString())
+            ->selectRaw('COUNT(*) as count, COALESCE(SUM(quantity * unit_price), 0) as revenue')
+            ->first();
+
+        return view('sales.closed', ['stats' => $stats]);
     }
 
     private function currentSession(): ?DailySession
