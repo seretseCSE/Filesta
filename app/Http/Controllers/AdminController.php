@@ -22,7 +22,7 @@ class AdminController extends Controller
 {
     public function dashboard(Request $request): View
     {
-        $dateRange = $request->input('date_range', 'today');
+        $dateRange = $request->input('date_range', 'all');
         $salesmanId = $request->input('salesman_id', 'all');
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
@@ -36,8 +36,7 @@ class AdminController extends Controller
         } elseif ($dateRange === 'custom' && $startDate && $endDate) {
             $salesQuery->whereBetween('sale_date', [$startDate, $endDate]);
         } else {
-            $dateRange = 'today';
-            $salesQuery->whereDate('sale_date', today());
+            $dateRange = 'all';
         }
 
         if ($salesmanId !== 'all') {
@@ -101,13 +100,13 @@ class AdminController extends Controller
 
     public function exportReports(Request $request): BinaryFileResponse
     {
-        $dateRange = $request->input('date_range', 'today');
+        $dateRange = $request->input('date_range', 'all');
         $salesmanId = $request->input('salesman_id', 'all');
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
 
         if ($dateRange === 'custom' && !($startDate && $endDate)) {
-            $dateRange = 'today';
+            $dateRange = 'all';
         }
 
         return Excel::download(new ReportsExport($dateRange, $salesmanId, $startDate, $endDate), 'reports.xlsx');
@@ -282,7 +281,7 @@ class AdminController extends Controller
 
     public function sales(Request $request): View
     {
-        $dateRange = $request->input('date_range', 'today');
+        $dateRange = $request->input('date_range', 'all');
         $salesmanId = $request->input('salesman_id', 'all');
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
@@ -296,8 +295,7 @@ class AdminController extends Controller
         } elseif ($dateRange === 'custom' && $startDate && $endDate) {
             $salesQuery->whereBetween('sale_date', [$startDate, $endDate]);
         } else {
-            $dateRange = 'today';
-            $salesQuery->whereDate('sale_date', today());
+            $dateRange = 'all';
         }
 
         if ($salesmanId !== 'all') {
